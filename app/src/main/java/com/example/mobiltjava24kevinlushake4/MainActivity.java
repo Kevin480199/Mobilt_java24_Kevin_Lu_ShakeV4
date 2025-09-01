@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor rotationSensor;
     private Sensor compassRotationSensor;
     ImageView compass;
+    TextView eventValues;
     private int currentSensorType = -1; // Track active sensor type
     private boolean isSensorRegistered = false;
 
@@ -53,10 +54,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-            compassRotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+            compassRotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if (compassRotationSensor != null) {
                 sensorManager.registerListener(this, compassRotationSensor, SensorManager.SENSOR_DELAY_UI);
             }
+            eventValues = findViewById(R.id.eventValues);
             compass = findViewById(R.id.compass);
             toggleBarometer = findViewById(R.id.toggleBarometer);
             textPressure = findViewById(R.id.textPressure);
@@ -161,6 +163,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             ": X=" + values[0] +
                             ", Y=" + values[1] +
                             ", Z=" + values[2]);
+                    eventValues.setText(sensorTypeToString(currentSensorType) +
+                            ": X=" + values[0] +
+                            ", Y=" + values[1] +
+                            ", Z=" + values[2]);
                     View mainLayout = findViewById(R.id.main);
                     int red = (int) Math.min(abs(values[0]) * 200, 255);
                     int green = (int) Math.min(abs(values[1]) * 200, 255);
@@ -180,8 +186,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             float azimuth = (float) Math.toDegrees(orientationAngles[0]); // Rotation around Z axis
 
-            compass.setRotationX(-azimuth);
-            compass.setRotationY(-azimuth);
+            //compass.setRotationX(-azimuth);
+            //compass.setRotationY(-azimuth);
             compass.setRotation(-azimuth); // Rotate the imageView
         }
 
