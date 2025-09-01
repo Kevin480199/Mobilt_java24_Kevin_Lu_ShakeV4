@@ -1,10 +1,7 @@
 package com.example.mobiltjava24kevinlushake4;
 
-import static android.content.ContentValues.TAG;
-
 import static java.lang.Math.abs;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -29,11 +26,12 @@ import androidx.core.view.WindowInsetsCompat;
 public class MainActivity extends AppCompatActivity implements SensorEventListener{
 
     private ToggleButton toggleBarometer;
-    private TextView textpressure;
+    private TextView textPressure;
     private Sensor pressureSensor;
     private SensorManager sensorManager;
     private Sensor currentSensor = null;
     private Sensor rotationSensor;
+    private Sensor compassRotationSensor;
     ImageView compass;
     private int currentSensorType = -1; // Track active sensor type
     private boolean isSensorRegistered = false;
@@ -55,13 +53,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-            rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-            if (rotationSensor != null) {
-                sensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_UI);
+            compassRotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+            if (compassRotationSensor != null) {
+                sensorManager.registerListener(this, compassRotationSensor, SensorManager.SENSOR_DELAY_UI);
             }
             compass = findViewById(R.id.compass);
             toggleBarometer = findViewById(R.id.toggleBarometer);
-            textpressure = findViewById(R.id.textPressure);
+            textPressure = findViewById(R.id.textPressure);
 
             linearAccButton = findViewById(R.id.button_linear);
             rotationVectorButton = findViewById(R.id.button_rotation);
@@ -88,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
                     if (pressureSensor != null) {
                         sensorManager.registerListener(this, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
-                        textpressure.setVisibility(View.VISIBLE);
+                        textPressure.setVisibility(View.VISIBLE);
                     } else {
                         Toast.makeText(this, "Pressure Sensor not available", Toast.LENGTH_SHORT).show();
                         toggleBarometer.setChecked(false);
@@ -99,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         sensorManager.unregisterListener(this, pressureSensor);
                         pressureSensor = null;
                     }
-                    textpressure.setVisibility(View.GONE);
+                    textPressure.setVisibility(View.GONE);
                 }
             });
 
@@ -116,7 +114,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // Unregister current sensor if one is active
         if (isSensorRegistered) {
-            sensorManager.unregisterListener(this);
+            sensorManager.unregisterListener(this, currentSensor);
+            // When rotation vector is deactivated activate it again
+            if (compassRotationSensor != null && currentSensor == compassRotationSensor) {
+                sensorManager.registerListener(this, compassRotationSensor, SensorManager.SENSOR_DELAY_UI);
+            }
             isSensorRegistered = false;
             currentSensor = null;
             currentSensorType = -1;
@@ -169,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         }
 
-        if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+        if (event.sensor == compassRotationSensor) {
             float[] rotationMatrix = new float[9];
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
 
@@ -178,12 +180,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             float azimuth = (float) Math.toDegrees(orientationAngles[0]); // Rotation around Z axis
 
+            compass.setRotationX(-azimuth);
+            compass.setRotationY(-azimuth);
             compass.setRotation(-azimuth); // Rotate the imageView
         }
 
         if (event.sensor.getType() == Sensor.TYPE_PRESSURE) {
             float pressure = event.values[0];
-            textpressure.setText("Pressure: " + pressure + "hPa");
+            textPressure.setText("Pressure: " + pressure + "hPa");
         }
 
     }
