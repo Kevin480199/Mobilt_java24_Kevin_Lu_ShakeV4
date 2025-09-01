@@ -30,7 +30,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor pressureSensor;
     private SensorManager sensorManager;
     private Sensor currentSensor = null;
-    private Sensor rotationSensor;
+    private float currentAzimuth = 0f;
+    private long lastGyroTimestamp = 0;
     private Sensor compassRotationSensor;
     ImageView compass;
     TextView eventValues;
@@ -178,6 +179,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
         if (event.sensor == compassRotationSensor) {
+
+            if (lastGyroTimestamp != 0) {
+                final float dT = (event.timestamp - lastGyroTimestamp) * 1.0f / 1_000_000_000.0f; // convert nanoseconds to seconds
+                float axisZ = event.values[2]; // rotation around Z axis
+
+                float deltaAzimuth = (float) Math.toDegrees(axisZ * dT); // radians to degrees
+                currentAzimuth += deltaAzimuth;
+
+                // Keep azimuth in [-180, 180] or [0, 360]
+                currentAzimuth = (currentAzimuth + 360) % 360;
+
+                compass.setRotation(-currentAzimuth);
+            }
+
+            lastGyroTimestamp = event.timestamp;
+            /*
             float[] rotationMatrix = new float[9];
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
 
@@ -189,6 +206,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             //compass.setRotationX(-azimuth);
             //compass.setRotationY(-azimuth);
             compass.setRotation(-azimuth); // Rotate the imageView
+        */
         }
 
         if (event.sensor.getType() == Sensor.TYPE_PRESSURE) {
