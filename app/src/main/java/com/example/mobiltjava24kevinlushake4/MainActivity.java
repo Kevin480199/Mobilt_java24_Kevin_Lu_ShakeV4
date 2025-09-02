@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float[] values = event.values;
             if (currentTime - lastUpdateTime > 200) { // log only every 200ms
                 lastUpdateTime = currentTime;
-                if(values[0] > abs(10) || values[1] > 10 || values[2] > 20){
+                if(values[0] > abs(15) || values[1] > abs(15) || values[2] > abs(15)){
                     Log.w("Overloaded", "X: " + values[0] + " Y: " + values[1] + " Z: " + values[2]);
                 }else{
                     Log.d("SensorData", sensorTypeToString(currentSensorType) +
